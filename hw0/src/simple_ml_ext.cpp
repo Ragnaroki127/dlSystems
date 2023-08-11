@@ -40,7 +40,7 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
         float *X_b = new float[batch * n]();
         for (size_t i = iter * batch * n; i < (iter + 1) * batch * n; ++i)
         {
-            X_b[i - iter * batch] = X[i];
+            X_b[i - iter * batch * n] = X[i];
         }
 
         unsigned char *y_b = new unsigned char[batch]();
