@@ -5,6 +5,22 @@
 
 namespace py = pybind11;
 
+void matmul(const float* X, const float* Y, float* Z, int m, int n, int k)
+{
+    // X: mxn, Y: nxk, Z: mxk
+    for (int i = 0; i < m; ++i)
+    {
+        for (int j = 0; j < k; ++j)
+        {
+            Z[i * k + j] = 0.f;
+            for (int s = 0; s < n; ++s)
+            {
+                Z[i * k + j] += X[i * n + s] * Y[s * k + j];
+            }
+        }
+    }
+}
+
 
 void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
 								  float *theta, size_t m, size_t n, size_t k,
@@ -33,90 +49,40 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      */
 
     /// BEGIN YOUR CODE
-    size_t totalIters = m / batch;
+    int totalIters = (m + batch - 1) / batch;
 
-    for (size_t iter = 0; iter < totalIters; ++iter)
+    for (int iter = 0; iter < totalIters; ++iter)
     {
-        float *X_b = new float[batch * n]();
-        for (size_t i = iter * batch * n; i < (iter + 1) * batch * n; ++i)
+        const float* x = &X[iter * batch * n];
+        float * Z = new float[batch * k];
+        matmul(x, theta, Z, batch, n, k);
+        for (int i = 0; i < batch * k; ++i) Z[i] = exp(Z[i]);
+
+        for (int i = 0; i < batch; ++i)
         {
-            X_b[i - iter * batch * n] = X[i];
+            float sum = 0;
+            for (int j = 0; j < k; ++j) sum += Z[i * k + j];
+            for (int j = 0; j < k; ++j) Z[i * k + j] /= sum;
         }
 
-        unsigned char *y_b = new unsigned char[batch]();
-        for (size_t i = iter * batch; i < (iter + 1) * batch; ++i)
-        {
-            y_b[i - iter * batch] = y[i];
-        }
+        for (int i = 0; i < batch; ++i) Z[i * k + y[iter * batch + i]] -= 1.f;
 
-        float *Z_b = new float[batch * k]();
-        for (size_t i = 0; i < batch; ++i)
+        float *x_T = new float[n * batch];
+        float *grad = new float[n * k];
+
+        for (int i = 0; i < batch; ++i)
         {
-            for (size_t j = 0; j < k; ++j)
+            for (int j = 0; j < n; ++j)
             {
-                for (size_t l = 0; l < n; ++l)
-                {
-                    Z_b[i * k + j] += X_b[i * n + l] * theta[l * k + j];
-                }
+                x_T[j * batch + i] = x[i * n + j];
             }
         }
 
-        for (size_t i = 0; i < batch; ++i)
-        {
-            for (size_t j = 0; j < k; ++j)
-            {
-                Z_b[i * k + j] = exp(Z_b[i * k + j]);
-            }
-        }
+        matmul(x_T, Z, grad, n, batch, k);
+        for (int i = 0; i < n * k; ++i) theta[i] -= lr / batch * grad[i];
 
-        float *Z_b_sum = new float[batch]();
-        for (size_t i = 0; i < batch; ++i)
-        {
-            for (size_t j = 0; j < k; ++j)
-            {
-                Z_b_sum[i] += Z_b[i * k + j];
-            }
-        }
-
-        for (size_t i = 0; i < batch; ++i)
-        {
-            for (size_t j = 0; j < k; ++j)
-            {
-                Z_b[i * k + j] /= Z_b_sum[i];
-            }
-        }
-
-        float *Iy_b = new float[batch * k]();
-        for (size_t i = 0; i < batch; ++i)
-        {
-            Iy_b[i * k + y_b[i]] = 1.f;
-        }
-
-        float *grad = new float[n * k]();
-        for (size_t i = 0; i < n; ++i)
-        {
-            for (size_t j = 0; j < k; ++j)
-            {
-                for (size_t l = 0; l < batch; ++l)
-                {
-                    grad[i * k + j] = X_b[l * n + i] * (Z_b[l * k + j] - Iy_b[l * k + j]);
-                }
-            }
-        }
-
-        for (size_t i = 0; i < n; ++i)
-        {
-            for (size_t j = 0; j < k; ++j)
-            {
-                theta[i * k + j] -= lr / float(batch) * grad[i * k + j];
-            }
-        }
-
-        delete[] X_b;
-        delete[] y_b;
-        delete[] Z_b;
-        delete[] Z_b_sum;
-        delete[] Iy_b;
+        delete[] Z;
+        delete[] x_T;
         delete[] grad;
     }
     /// END YOUR CODE
