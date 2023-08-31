@@ -1,14 +1,13 @@
-"""Operator implementations."""
-
+"""Operator and gradient implementations."""
 from numbers import Number
 from typing import Optional, List
 from .autograd import NDArray
 from .autograd import Op, Tensor, Value, TensorOp
-from .autograd import TensorTuple, TensorTupleOp
+
 import numpy
 
-# NOTE: we will import numpy as the array_api
-# as the backend for our computations, this line will change in later homeworks
+# NOTE: we will numpy as the array_api
+# to backup our computations, this line will change in later homeworks
 import numpy as array_api
 
 
@@ -75,13 +74,12 @@ class PowerScalar(TensorOp):
 
     def compute(self, a: NDArray) -> NDArray:
         ### BEGIN YOUR SOLUTION
-        return array_api.power(a, self.scalar)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        in_val = node.inputs[0]
-        return (out_grad * in_val**(self.scalar - 1) * self.scalar,)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -94,13 +92,12 @@ class EWiseDiv(TensorOp):
 
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
-        return array_api.divide(a, b)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        lhs, rhs = node.inputs
-        return (out_grad / rhs , -lhs / rhs**2 * out_grad)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -114,12 +111,12 @@ class DivScalar(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.divide(a, self.scalar)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return out_grad / self.scalar
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -133,15 +130,12 @@ class Transpose(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        if self.axes is None:
-            return array_api.swapaxes(a, -1, -2)
-        else:
-            return array_api.swapaxes(a, self.axes[0], self.axes[1])
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return out_grad.transpose(self.axes)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -155,12 +149,12 @@ class Reshape(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.reshape(a, self.shape)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return out_grad.reshape(node.inputs[0].shape)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -177,16 +171,7 @@ class BroadcastTo(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        in_shape = list(reversed(node.inputs[0].shape))
-        out_shape = list(reversed(out_grad.shape))
-        axes = []
-        for i in range(len(out_shape)):
-            if i < len(in_shape):
-                if out_shape[i] // in_shape[i] > 1:
-                    axes.append(len(out_shape) - i - 1)
-            else:
-                axes.append(len(out_shape) - i - 1)
-        return out_grad.sum(tuple(axes)).reshape(node.inputs[0].shape)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -200,16 +185,12 @@ class Summation(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.sum(a, self.axes)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        broadcast_shape = list(node.inputs[0].shape)
-        axes = list(range(len(broadcast_shape))) if self.axes is None else self.axes
-        for ax in axes:
-            broadcast_shape[ax] = 1
-        return out_grad.reshape(broadcast_shape).broadcast_to(node.inputs[0].shape)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -220,19 +201,12 @@ def summation(a, axes=None):
 class MatMul(TensorOp):
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
-        return array_api.matmul(a, b)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        lhs, rhs = node.inputs
-        grad_lhs = out_grad.matmul(rhs.transpose())
-        if len(grad_lhs.shape) > len(lhs.shape):
-            grad_lhs = grad_lhs.sum(tuple(list(range(len(grad_lhs.shape) - len(lhs.shape)))))
-        grad_rhs = lhs.transpose().matmul(out_grad)
-        if len(grad_rhs.shape) > len(rhs.shape):
-            grad_rhs = grad_rhs.sum(tuple(list(range(len(grad_rhs.shape) - len(rhs.shape)))))
-        return grad_lhs, grad_rhs
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -243,12 +217,12 @@ def matmul(a, b):
 class Negate(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.negative(a)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return -out_grad
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -259,7 +233,7 @@ def negate(a):
 class Log(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.log(a)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -274,9 +248,7 @@ def log(a):
 
 class Exp(TensorOp):
     def compute(self, a):
-        ### BEGIN YOUR SOLUTION
         return array_api.exp(a)
-        ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
@@ -292,7 +264,7 @@ def exp(a):
 class ReLU(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.clip(a, 0., None)
+        raise NotImplementedError()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -304,3 +276,98 @@ class ReLU(TensorOp):
 def relu(a):
     return ReLU()(a)
 
+
+class LogSoftmax(TensorOp):
+    def compute(self, Z):
+        ### BEGIN YOUR SOLUTION
+        raise NotImplementedError()
+        ### END YOUR SOLUTION
+
+    def gradient(self, out_grad, node):
+        ### BEGIN YOUR SOLUTION
+        raise NotImplementedError()
+        ### END YOUR SOLUTION
+
+
+def logsoftmax(a):
+    return LogSoftmax()(a)
+
+
+# additional helper functions
+def full(
+    shape, fill_value, *, rand={}, dtype="float32", device=None, requires_grad=False
+):
+    # numpy do not need device argument
+    kwargs = {"device": device} if array_api is not numpy else {}
+    device = device if device else cpu()
+
+    if not rand or "dist" not in rand:
+        arr = array_api.full(shape, fill_value, dtype=dtype, **kwargs)
+    else:
+        if rand["dist"] == "normal":
+            arr = array_api.randn(
+                shape, dtype, mean=rand["mean"], std=rand["std"], **kwargs
+            )
+        if rand["dist"] == "binomial":
+            arr = array_api.randb(
+                shape, dtype, ntrials=rand["trials"], p=rand["prob"], **kwargs
+            )
+        if rand["dist"] == "uniform":
+            arr = array_api.randu(
+                shape, dtype, low=rand["low"], high=rand["high"], **kwargs
+            )
+
+    return Tensor.make_const(arr, requires_grad=requires_grad)
+
+
+def zeros(shape, *, dtype="float32", device=None, requires_grad=False):
+    return full(shape, 0, dtype=dtype, device=device, requires_grad=requires_grad)
+
+
+def randn(
+    shape, *, mean=0.0, std=1.0, dtype="float32", device=None, requires_grad=False
+):
+    return full(
+        shape,
+        0,
+        rand={"dist": "normal", "mean": mean, "std": std},
+        dtype=dtype,
+        device=device,
+        requires_grad=requires_grad,
+    )
+
+
+def randb(shape, *, n=1, p=0.5, dtype="float32", device=None, requires_grad=False):
+    return full(
+        shape,
+        0,
+        rand={"dist": "binomial", "trials": n, "prob": p},
+        dtype=dtype,
+        device=device,
+        requires_grad=requires_grad,
+    )
+
+
+def randu(shape, *, low=0, high=1, dtype="float32", device=None, requires_grad=False):
+    return full(
+        shape,
+        0,
+        rand={"dist": "uniform", "low": low, "high": high},
+        dtype=dtype,
+        device=device,
+        requires_grad=requires_grad,
+    )
+
+
+def zeros_like(array, *, device=None, requires_grad=False):
+    device = device if device else array.device
+    return full(
+        array.shape, 0, dtype=array.dtype, device=device, requires_grad=requires_grad
+    )
+
+
+def ones_like(array, *, device=None, requires_grad=False):
+    device = device if device else array.device
+    return full(
+        array.shape, 1, dtype=array.dtype, device=device, requires_grad=requires_grad
+    )

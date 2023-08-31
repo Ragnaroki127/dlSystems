@@ -29,12 +29,15 @@ def gradient_check(f, *args, tol=1e-6, backward=False, **kwargs):
         for i in range(len(args))
     )
     print(numerical_grads, computed_grads)
-    return numerical_grads, computed_grads
 
 if __name__ == "__main__":
-    gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(1, 3)), shape=(2, 3, 3))
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(3, 1)), shape=(3, 3))
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(1, 3)), shape=(3, 3))
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(1,)), shape=(3, 3, 3))
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn()), shape=(3, 3, 3))
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(5,4,1)), shape=(5,4,3))
+    # gradient_check(ndl.summation, ndl.Tensor(np.random.randn(5,4, 3, 2, 1)), axes=(2,3))
+    # gradient_check(ndl.summation, ndl.Tensor(np.random.randn(5,4)), axes=(1,))
+    # gradient_check(ndl.summation, ndl.Tensor(np.random.randn(5,4)), axes=(0,))
+    # gradient_check(ndl.summation, ndl.Tensor(np.random.randn(5,4)), axes=(0,1))
+    # gradient_check(ndl.summation, ndl.Tensor(np.random.randn(5,4,1)), axes=(0,1))
