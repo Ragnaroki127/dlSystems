@@ -3,7 +3,6 @@ import needle
 from typing import List, Optional, NamedTuple, Tuple, Union
 from collections import namedtuple
 import numpy
-from needle import init
 
 # needle version
 LAZY_MODE = False
@@ -34,25 +33,6 @@ class CPUDevice(Device):
 
     def enabled(self):
         return True
-
-    def zeros(self, *shape, dtype="float32"):
-        return numpy.zeros(shape, dtype=dtype)
-
-    def ones(self, *shape, dtype="float32"):
-        return numpy.ones(shape, dtype=dtype)
-
-    def randn(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
-        # .astype("float32") does work if we're generating a singleton
-        return numpy.random.randn(*shape) 
-
-    def rand(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
-        # .astype("float32") does work if we're generating a singleton
-        return numpy.random.rand(*shape)
-
-    def one_hot(self, n, i, dtype="float32"):
-        return numpy.eye(n, dtype=dtype)[i]
 
 
 def cpu():
@@ -336,7 +316,7 @@ class Tensor(Value):
         return data.device
 
     def backward(self, out_grad=None):
-        out_grad = out_grad if out_grad else init.ones(*self.shape, dtype=self.dtype, device=self.device)
+        out_grad = out_grad if out_grad else Tensor(numpy.ones(self.shape, dtype="float32"))
         compute_gradient_of_variables(self, out_grad)
 
     def __repr__(self):
@@ -407,6 +387,7 @@ class Tensor(Value):
     __rmatmul__ = __matmul__
 
 
+
 def compute_gradient_of_variables(output_tensor, out_grad):
     """Take gradient of output node with respect to each node in node_list.
 
@@ -423,18 +404,7 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    for node in reverse_topo_order:
-        grad_node = sum_node_list(node_to_output_grads_list[node])
-        node.grad = grad_node
-        if node.op is None:
-            continue
-
-        partial_adjoints_node = node.op.gradient_as_tuple(grad_node, node)
-        for sub_node, partial_adjoint in zip(node.inputs, partial_adjoints_node):
-            if sub_node not in node_to_output_grads_list:
-                node_to_output_grads_list[sub_node] = [partial_adjoint]
-            else:
-                node_to_output_grads_list[sub_node].append(partial_adjoint)
+    raise NotImplementedError()
     ### END YOUR SOLUTION
 
 
@@ -447,25 +417,14 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    visited = set()
-    result = []
-
-    for node in node_list:
-        topo_sort_dfs(node, visited, result)
-
-    return result
+    raise NotImplementedError()
     ### END YOUR SOLUTION
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    if node in visited:
-        return 
-    for sub_node in node.inputs:
-        topo_sort_dfs(sub_node, visited, topo_order)
-    topo_order.append(node)
-    visited.add(node)
+    raise NotImplementedError()
     ### END YOUR SOLUTION
 
 
@@ -478,4 +437,5 @@ def sum_node_list(node_list):
     """Custom sum function in order to avoid create redundant nodes in Python sum implementation."""
     from operator import add
     from functools import reduce
+
     return reduce(add, node_list)
