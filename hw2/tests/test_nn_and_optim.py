@@ -7,7 +7,10 @@ import needle.nn as nn
 sys.path.append("./apps")
 from mlp_resnet import *
 
-import mugrade
+try:
+    import mugrade
+except:
+    pass
 
 """Deterministically generate a matrix"""
 def get_tensor(*shape, entropy=1):

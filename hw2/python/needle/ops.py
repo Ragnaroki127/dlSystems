@@ -371,12 +371,25 @@ class LogSumExp(TensorOp):
 
     def compute(self, Z):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        Z_max_ori = array_api.max(Z, axis=self.axes, keepdims=True)
+        Z_max_reduce = array_api.max(Z, axis=self.axes)
+        return array_api.log(array_api.sum(array_api.exp(Z - Z_max_ori), axis=self.axes)) + Z_max_reduce
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        Z = node.inputs[0]
+        Z_max_ori = Z.realize_cached_data().max(axis=self.axes, keepdims=True)
+        Z_exp = exp(Z - Z_max_ori)
+        Z_exp_sum = summation(Z_exp, axes=self.axes)
+        grad_1 = out_grad / Z_exp_sum
+
+        shape_Z = list(Z.shape)
+        expand_axes = range(len(shape_Z)) if self.axes is None else self.axes
+        for ax in expand_axes:
+            shape_Z[ax] = 1
+        grad_2 = grad_1.reshape(shape_Z).broadcast_to(Z.shape)
+        return grad_2 * Z_exp
         ### END YOUR SOLUTION
 
 
