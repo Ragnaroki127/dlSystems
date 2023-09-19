@@ -1,6 +1,7 @@
 """Optimization module"""
 import needle as ndl
 import numpy as np
+from collections import defaultdict
 
 
 class Optimizer:
@@ -20,14 +21,35 @@ class SGD(Optimizer):
         super().__init__(params)
         self.lr = lr
         self.momentum = momentum
-        self.u = {}
+        self.u = {key: 0. for key in params}
         self.weight_decay = weight_decay
 
     def step(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        for param in self.params:
+            grad = param.grad.data + self.weight_decay * param.data
+            self.u[param] = self.u[param] * self.momentum + (1. - self.momentum) * grad
+            param.data = param.data - self.lr * self.u[param]
+        ## END YOUR SOLUTION
 
+# class SGD(Optimizer):
+#     def __init__(self, params, lr=0.01, momentum=0.0, weight_decay=0.0):
+#         super().__init__(params)
+#         self.lr = lr
+#         self.momentum = momentum
+#         self.u = defaultdict(float)
+#         self.weight_decay = weight_decay
+
+#     def step(self):
+#         ### BEGIN YOUR SOLUTION
+#         for w in self.params:
+#             if self.weight_decay > 0:
+#                 grad = w.grad.data + self.weight_decay * w.data
+#             else:
+#                 grad = w.grad.data
+#             self.u[w] = self.momentum * self.u[w] + (1 - self.momentum) * grad
+#             w.data = w.data - self.lr * self.u[w]
+#         ### END YOUR SOLUTION
 
 class Adam(Optimizer):
     def __init__(
