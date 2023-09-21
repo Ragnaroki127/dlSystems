@@ -32,25 +32,6 @@ class SGD(Optimizer):
             param.data = param.data - self.lr * self.u[param]
         ## END YOUR SOLUTION
 
-# class SGD(Optimizer):
-#     def __init__(self, params, lr=0.01, momentum=0.0, weight_decay=0.0):
-#         super().__init__(params)
-#         self.lr = lr
-#         self.momentum = momentum
-#         self.u = defaultdict(float)
-#         self.weight_decay = weight_decay
-
-#     def step(self):
-#         ### BEGIN YOUR SOLUTION
-#         for w in self.params:
-#             if self.weight_decay > 0:
-#                 grad = w.grad.data + self.weight_decay * w.data
-#             else:
-#                 grad = w.grad.data
-#             self.u[w] = self.momentum * self.u[w] + (1 - self.momentum) * grad
-#             w.data = w.data - self.lr * self.u[w]
-#         ### END YOUR SOLUTION
-
 class Adam(Optimizer):
     def __init__(
         self,
@@ -69,10 +50,18 @@ class Adam(Optimizer):
         self.weight_decay = weight_decay
         self.t = 0
 
-        self.m = {}
-        self.v = {}
+        self.m = {key: 0. for key in self.params}
+        self.v = {key: 0. for key in self.params}
 
     def step(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.t += 1
+        for param in self.params:
+            grad = param.grad.data + self.weight_decay * param.data
+            self.m[param] = self.beta1 * self.m[param] + (1. - self.beta1) * grad
+            self.v[param] = self.beta2 * self.v[param] + (1. - self.beta2) * grad**2
+            # bias correction
+            unbiased_m = self.m[param] / (1. - self.beta1**self.t)
+            unbiased_v = self.v[param] / (1. - self.beta2**self.t)
+            param.data = param.data - self.lr * unbiased_m / (unbiased_v**0.5 + self.eps)
         ### END YOUR SOLUTION
