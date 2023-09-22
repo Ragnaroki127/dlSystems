@@ -87,7 +87,6 @@ class RandomCrop(Transform):
         return padded_img[self.padding + shift_x: self.padding + img.shape[0] + shift_x, self.padding + shift_y: self.padding + img.shape[1] + shift_y]
         ### END YOUR SOLUTION
 
-
 class Dataset:
     r"""An abstract class representing a `Dataset`.
 
@@ -111,7 +110,6 @@ class Dataset:
             for tform in self.transforms:
                 x = tform(x)
         return x
-
 
 class DataLoader:
     r"""
@@ -140,16 +138,26 @@ class DataLoader:
         if not self.shuffle:
             self.ordering = np.array_split(np.arange(len(dataset)), 
                                            range(batch_size, len(dataset), batch_size))
+        else:
+            self.ordering = np.array_split(np.random.permutation(np.arange(len(dataset))), 
+                                           range(batch_size, len(dataset), batch_size))
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.num_iters = np.ceil(len(self.dataset) / self.batch_size)
+        self.iter = 0
         ### END YOUR SOLUTION
         return self
 
     def __next__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.iter < self.num_iters:
+            order = self.ordering[self.iter]
+            batch_data = self.dataset[order]
+            batch_data = tuple(map(lambda x: Tensor(x), batch_data))
+            self.iter += 1
+            return batch_data
+        raise StopIteration
         ### END YOUR SOLUTION
 
 
@@ -161,17 +169,21 @@ class MNISTDataset(Dataset):
         transforms: Optional[List] = None,
     ):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.imgs, self.labels = parse_mnist(image_filename, label_filename)
+        self.transforms = transforms
         ### END YOUR SOLUTION
 
     def __getitem__(self, index) -> object:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        img, label = self.imgs[index, :], self.labels[index]
+        img = img.reshape((28, 28, -1))
+        img = self.apply_transforms(img).reshape((-1, 784))
+        return img, label
         ### END YOUR SOLUTION
 
     def __len__(self) -> int:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.labels.shape[0]
         ### END YOUR SOLUTION
 
 class NDArrayDataset(Dataset):
@@ -183,3 +195,4 @@ class NDArrayDataset(Dataset):
 
     def __getitem__(self, i) -> object:
         return tuple([a[i] for a in self.arrays])
+
