@@ -241,7 +241,11 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if prod(new_shape) != prod(self._shape):
+            raise TypeError('Product of new shape is not equal to product of original shape')
+        if not self.is_compact():
+            raise TypeError('Matrix is not compact')
+        return NDArray.make(new_shape, NDArray.compact_strides(new_shape), self._device, self._handle, self._offset)
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -264,7 +268,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = tuple(np.array(self._shape)[list(new_axes)])
+        new_strides = tuple(np.array(self._strides)[list(new_axes)])
+        return NDArray.make(new_shape, new_strides, self._device, self._handle, self._offset)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -285,7 +291,15 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert len(new_shape) == len(self._shape)
+        new_strides = list(self._strides)
+        for i in range(len(new_shape)):
+            if self._shape[i] != 1:
+                assert self._shape[i] == new_shape[i]
+            elif new_shape[i] != 1:
+                new_strides[i] = 0
+        return NDArray.make(new_shape, tuple(new_strides), self._device, self._handle, self._offset)
+                
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -348,7 +362,10 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = tuple([(idx.stop - idx.start + idx.step - 1) // idx.step for idx in idxs])
+        new_strides = tuple([idx.step * st for (idx, st) in zip(idxs, self.strides)])
+        new_offset = sum([idx.start * st for (idx, st) in zip(idxs, self.strides)])
+        return NDArray.make(new_shape, new_strides, self._device, self._handle, new_offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
